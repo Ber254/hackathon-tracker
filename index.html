@@ -1,0 +1,536 @@
+<title>Hackathon Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* ─── TOKENS ───────────────────────────────────────────────────────────── */
+/* Layout: single-column header + responsive card grid */
+:root {
+  --bg:        #0C0C14;
+  --surface:   #13131F;
+  --surface2:  #1C1C2E;
+  --border:    #252540;
+  --fg:        #E0E0F0;
+  --muted:     #6868A0;
+  --accent:    #7C5CFC;
+  --accent-lo: rgba(124,92,252,.12);
+
+  --s-planning:   #3B82F6;
+  --s-building:   #F59E0B;
+  --s-submitted:  #A855F7;
+  --s-won:        #22C55E;
+  --s-lost:       #64748B;
+
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
+
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:       #F0F0FA;
+    --surface:  #FFFFFF;
+    --surface2: #EAEAF5;
+    --border:   #D4D4E8;
+    --fg:       #12121E;
+    --muted:    #7070A0;
+    --accent:   #6240F0;
+    --accent-lo: rgba(98,64,240,.10);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg:       #F0F0FA;
+  --surface:  #FFFFFF;
+  --surface2: #EAEAF5;
+  --border:   #D4D4E8;
+  --fg:       #12121E;
+  --muted:    #7070A0;
+  --accent:   #6240F0;
+  --accent-lo: rgba(98,64,240,.10);
+  color-scheme: light;
+}
+
+/* ─── RESET & BASE ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0 }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  padding-left:  max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px;
+  min-height: 100%;
+}
+
+/* ─── HEADER ───────────────────────────────────────────────────────────── */
+.site-header {
+  max-width: 860px;
+  margin: 0 auto 48px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wordmark h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  letter-spacing: -.03em;
+  color: var(--fg);
+  line-height: 1;
+}
+.wordmark h1 span { color: var(--accent); }
+.wordmark p {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.header-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-chip strong { color: var(--fg); font-size: 15px; font-family: var(--font-display); }
+.theme-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  font-size: 14px;
+  line-height: 1;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ─── GRID ─────────────────────────────────────────────────────────────── */
+.grid {
+  max-width: 860px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr));
+  gap: 16px;
+}
+
+/* ─── CARD ─────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color .2s;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--c-status);
+  border-radius: 12px 12px 0 0;
+}
+.card:hover { border-color: var(--accent); }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-num {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .1em;
+}
+.card-status {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: var(--accent-lo);
+  color: var(--c-status);
+  border: 1px solid var(--c-status);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+.card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--fg);
+  text-wrap: balance;
+  line-height: 1.3;
+}
+.card-project {
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+/* ─── FIELDS ───────────────────────────────────────────────────────────── */
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+.field { display: flex; flex-direction: column; gap: 2px; }
+.field-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.field-value {
+  font-size: 12.5px;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.field-value.countdown {
+  color: var(--c-status);
+  font-weight: 500;
+}
+
+/* ─── DIVIDER ──────────────────────────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); }
+
+/* ─── NOTES ────────────────────────────────────────────────────────────── */
+.notes-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.notes-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+}
+.notes-text {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.pending-chip {
+  display: inline-block;
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ─── CARD FOOTER ──────────────────────────────────────────────────────── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 10px;
+  transition: background .15s, border-color .15s;
+}
+.card-link:hover { background: var(--accent-lo); border-color: var(--accent); }
+.card-link svg { flex-shrink: 0; }
+.prize-badge {
+  font-size: 11px;
+  color: #F59E0B;
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+}
+
+/* ─── EMPTY CARD ───────────────────────────────────────────────────────── */
+.card.empty {
+  border-style: dashed;
+  opacity: .55;
+}
+.card.empty:hover { opacity: 1; }
+.empty-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  color: var(--muted);
+  font-size: 12px;
+  gap: 8px;
+}
+
+/* ─── FOOTER ───────────────────────────────────────────────────────────── */
+.site-footer {
+  max-width: 860px;
+  margin: 40px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.site-footer p { font-size: 11px; color: var(--muted); }
+.last-updated { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+</style>
+
+<header class="site-header">
+  <div class="wordmark">
+    <h1>hack<span>.</span>track</h1>
+    <p>Estado de participaciones — 2026</p>
+  </div>
+  <div class="header-meta">
+    <div class="stat-chip" id="chip-total"><strong id="total-count">0</strong> hackathones</div>
+    <div class="stat-chip" id="chip-active"><strong id="active-count">0</strong> activos</div>
+    <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema">◑</button>
+  </div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<footer class="site-footer">
+  <p>Editá los datos directamente en <code>index.html</code> → sección <code>HACKATHONS</code></p>
+  <span class="last-updated" id="last-updated"></span>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   HACKATHONS — editá este array para actualizar el tracker
+   status: 'planning' | 'building' | 'submitted' | 'won' | 'lost'
+   deadline: ISO string o null
+   link: URL al hackathon o null
+   ══════════════════════════════════════════════════════════════════════ */
+const HACKATHONS = [
+  {
+    name: "UGREEN NAS Skill Hackathon 2026",
+    project: "Claim-Ready",
+    status: "building",
+    deadline: "2026-11-15T23:45:00-08:00",
+    prize: "$46,000 pool",
+    link: "https://github.com/Ber254/claim-ready",
+    linkLabel: "Repo",
+    notes: "Round 1: PDF 500 palabras + ZIP del paquete. Demo en Vercel publicado.",
+    pending: ["PDF 10 preguntas", "ZIP submission", "Devpost media"]
+  },
+  {
+    name: "Stellar Development Foundation Hackathon",
+    project: null,
+    status: "won",
+    deadline: null,
+    prize: "Premio pendiente de transferencia",
+    link: "https://stellar.org",
+    linkLabel: "Stellar",
+    notes: "Clasificamos a la segunda ronda. Premio ganado, transferencia pendiente.",
+    pending: ["Recibir transferencia del premio"]
+  },
+  {
+    name: "Solana Hackathon",
+    project: null,
+    status: "submitted",
+    deadline: "2026-11-04T23:59:00-03:00",
+    prize: null,
+    link: "https://solana.com",
+    linkLabel: "Solana",
+    notes: "Evaluación el 4 de noviembre.",
+    pending: []
+  },
+  {
+    name: "Monad Hackathon",
+    project: null,
+    status: "submitted",
+    deadline: "2026-11-04T23:59:00-03:00",
+    prize: null,
+    link: "https://monad.xyz",
+    linkLabel: "Monad",
+    notes: "Evaluación el 4 de noviembre.",
+    pending: []
+  }
+];
+
+/* ── STATUS CONFIG ─────────────────────────────────────────────────── */
+const STATUS = {
+  planning:  { label: "Planificando", color: "var(--s-planning)" },
+  building:  { label: "En progreso",  color: "var(--s-building)" },
+  submitted: { label: "Enviado",      color: "var(--s-submitted)" },
+  won:       { label: "Ganado ✓",    color: "var(--s-won)" },
+  lost:      { label: "Finalizado",   color: "var(--s-lost)" },
+};
+
+/* ── HELPERS ───────────────────────────────────────────────────────── */
+function formatDeadline(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function countdown(iso) {
+  if (!iso) return null;
+  const now = Date.now();
+  const target = new Date(iso).getTime();
+  const diff = target - now;
+  if (diff < 0) return "Vencido";
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Hoy";
+  if (days === 1) return "Mañana";
+  return `${days}d restantes`;
+}
+
+function linkIcon() {
+  return `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7M7 1h4m0 0v4M11 1L5.5 6.5"/>
+  </svg>`;
+}
+
+/* ── RENDER ────────────────────────────────────────────────────────── */
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  let activeCount = 0;
+
+  HACKATHONS.forEach((h, i) => {
+    const status = STATUS[h.status] || STATUS.planning;
+    const isPlaceholder = h.name.startsWith('Hackathon ') && !h.project;
+    const cd = countdown(h.deadline);
+    const dl = formatDeadline(h.deadline);
+
+    if (h.status === 'building' || h.status === 'planning' || h.status === 'submitted') {
+      activeCount++;
+    }
+
+    const card = document.createElement('article');
+    card.className = 'card' + (isPlaceholder ? ' empty' : '');
+    card.style.setProperty('--c-status', status.color);
+
+    if (isPlaceholder) {
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="card-num">#${String(i+1).padStart(2,'0')}</span>
+          <span class="card-status">—</span>
+        </div>
+        <div class="empty-inner">
+          <span>＋</span> Editá el array HACKATHONS en index.html
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="card-num">#${String(i+1).padStart(2,'0')}</span>
+          <span class="card-status">${status.label}</span>
+        </div>
+        <div>
+          ${h.project ? `<div class="card-project">${h.project}</div>` : ''}
+          <div class="card-title">${h.name}</div>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <span class="field-label">Deadline</span>
+            <span class="field-value">${dl ?? '—'}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">Cuenta regresiva</span>
+            <span class="field-value countdown">${cd ?? '—'}</span>
+          </div>
+          ${h.prize ? `
+          <div class="field">
+            <span class="field-label">Premio</span>
+            <span class="field-value">${h.prize}</span>
+          </div>` : ''}
+        </div>
+        ${(h.notes || (h.pending && h.pending.length)) ? `
+        <div class="divider"></div>
+        <div class="notes-area">
+          <span class="notes-label">Notas / pendientes</span>
+          ${h.notes ? `<p class="notes-text">${h.notes}</p>` : ''}
+          ${h.pending && h.pending.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+            ${h.pending.map(p => `<span class="pending-chip">${p}</span>`).join('')}
+          </div>` : ''}
+        </div>` : ''}
+        <div class="divider"></div>
+        <div class="card-footer">
+          ${h.link ? `<a class="card-link" href="${h.link}" target="_blank" rel="noopener">
+            ${linkIcon()} ${h.linkLabel ?? 'Ver hackathon'}
+          </a>` : '<span></span>'}
+          ${h.prize ? `<span class="prize-badge">🏆 ${h.prize}</span>` : ''}
+        </div>`;
+    }
+
+    grid.appendChild(card);
+  });
+
+  document.getElementById('total-count').textContent = HACKATHONS.length;
+  document.getElementById('active-count').textContent = activeCount;
+
+  const now = new Date();
+  document.getElementById('last-updated').textContent =
+    'Act. ' + now.toLocaleDateString('es-AR', {day:'2-digit',month:'short',year:'numeric'});
+}
+
+/* ── COUNTDOWN TICKER ──────────────────────────────────────────────── */
+function tick() {
+  document.querySelectorAll('.field-value.countdown').forEach((el, i) => {
+    const h = HACKATHONS.filter(x => x.deadline)[i];
+    if (h) el.textContent = countdown(h.deadline);
+  });
+}
+setInterval(tick, 60000);
+
+/* ── THEME TOGGLE ──────────────────────────────────────────────────── */
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('theme', next); } catch(e) {}
+}
+try {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+} catch(e) {}
+
+render();
+</script>
