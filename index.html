@@ -765,6 +765,8 @@ function buildCard(h, idx) {
   const curStatus = STATUS[cur.status] ?? STATUS.planning;
   const accent = cardAccent(h.stages);
   const myNet = h.totalPrize != null ? Math.round(h.totalPrize * h.mySharePct / 100) : null;
+  const resp = h.responsable || "Yo";
+  const respColor = resp === "Guille" ? "var(--s-planning)" : "var(--accent)";
 
   // stages stepper
   const stagesHtml = h.stages.map((s, si) => {
@@ -793,7 +795,18 @@ function buildCard(h, idx) {
   // prize section
   let prizeHtml = '';
   if (h.totalPrize != null) {
-    if (h.mySharePct < 100) {
+    if (resp === "Guille") {
+      // card a cargo de Guille — solo mostramos el pool total
+      prizeHtml = `
+        <div class="divider"></div>
+        <div class="prize-row">
+          <div class="prize-block">
+            <span class="prize-label">Premio pool</span>
+            <span class="prize-amount">${fmtPrize(h.totalPrize)}</span>
+          </div>
+        </div>`;
+    } else if (h.mySharePct < 100) {
+      // a cargo mio pero con split
       prizeHtml = `
         <div class="divider"></div>
         <div class="prize-row">
@@ -808,6 +821,7 @@ function buildCard(h, idx) {
           </div>
         </div>`;
     } else {
+      // 100% mio
       prizeHtml = `
         <div class="divider"></div>
         <div class="prize-row">
@@ -820,8 +834,6 @@ function buildCard(h, idx) {
   }
 
   // responsable
-  const resp = h.responsable || "Yo";
-  const respColor = resp === "Guille" ? "var(--s-planning)" : "var(--accent)";
   const partnersHtml = `
     <div class="divider"></div>
     <div class="partners-row">
