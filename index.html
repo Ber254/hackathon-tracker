@@ -483,7 +483,7 @@ body {
      closed: boolean,          // true = va a sección "Cerrados"
      totalPrize: number | null, // en USD
      mySharePct: number,       // tu % del premio (default 100)
-     partners: [{ name: string, sharePct: number }],
+     responsable: "Yo" | "Guille",  // quién lleva el hackathon
      link: string | null,
      linkLabel: string | null,
      stages: [{
@@ -502,7 +502,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 46000,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://github.com/Ber254/claim-ready",
     linkLabel: "Repo",
     profileLink: "https://devpost.com/submit-to/31552-ugreen-hackathon-2026-on-ai-nas/manage/submissions",
@@ -529,9 +529,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 5000,
     mySharePct: 50,
-    partners: [
-      { name: "Socio", sharePct: 50 }
-    ],
+    responsable: "Yo",
     link: "https://stellar.org",
     linkLabel: "Stellar",
     profileLink: "https://stellarapex.org/dashboard",
@@ -558,7 +556,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 10000,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://solana.com",
     linkLabel: "Solana",
     profileLink: "https://colosseum.com/arena/hackathon",
@@ -579,7 +577,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: null,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://near.org",
     linkLabel: "NEAR",
     profileLink: null,
@@ -606,7 +604,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 50000,
     mySharePct: 0,
-    partners: [{ name: "Guille", sharePct: 100 }],
+    responsable: "Guille",
     link: "https://qnx.devpost.com/",
     linkLabel: "QNX",
     profileLink: null,
@@ -622,7 +620,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 25000,
     mySharePct: 0,
-    partners: [{ name: "Guille", sharePct: 100 }],
+    responsable: "Guille",
     link: "https://deckthepixels.devpost.com/",
     linkLabel: "Devpost",
     profileLink: null,
@@ -638,7 +636,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 30000,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://firebasehybridaihackathon.devpost.com/",
     linkLabel: "Devpost",
     profileLink: null,
@@ -654,7 +652,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 25000,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://cloud9.devpost.com/",
     linkLabel: "Devpost",
     profileLink: null,
@@ -670,7 +668,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: null,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://www.micro1.ai/hackathon/agreement",
     linkLabel: "micro1",
     profileLink: null,
@@ -691,7 +689,7 @@ const HACKATHONS = [
     closed: false,
     totalPrize: 10000,
     mySharePct: 100,
-    partners: [],
+    responsable: "Yo",
     link: "https://monad.xyz",
     linkLabel: "Monad",
     profileLink: "https://hackathon.monad.xyz/project?tab=submission",
@@ -821,19 +819,15 @@ function buildCard(h, idx) {
     }
   }
 
-  // partners
-  let partnersHtml = '';
-  if (h.partners && h.partners.length) {
-    partnersHtml = `
-      <div class="divider"></div>
-      <div class="partners-row">
-        <span class="partners-label">Socios</span>
-        ${h.partners.map(p => `
-          <span class="partner-chip">
-            ${p.name} <span class="share">${p.sharePct}%</span>
-          </span>`).join('')}
-      </div>`;
-  }
+  // responsable
+  const resp = h.responsable || "Yo";
+  const respColor = resp === "Guille" ? "var(--s-planning)" : "var(--accent)";
+  const partnersHtml = `
+    <div class="divider"></div>
+    <div class="partners-row">
+      <span class="partners-label">Responsable</span>
+      <span class="partner-chip" style="border-color:${respColor};color:${respColor}">${resp}</span>
+    </div>`;
 
   // pending
   let pendingHtml = '';
