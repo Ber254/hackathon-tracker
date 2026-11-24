@@ -128,26 +128,63 @@ body {
 }
 .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ─── SECTION LABEL ────────────────────────────────────────────────────── */
-.section-label {
-  max-width: 900px;
-  margin: 0 auto 12px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--muted);
+/* ─── KANBAN ────────────────────────────────────────────────────────────── */
+.kanban {
   display: flex;
-  align-items: center;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 0 max(16px, env(safe-area-inset-left,0px)) 32px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.kanban-col {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+.kanban-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 2px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
-
-/* ─── GRID ─────────────────────────────────────────────────────────────── */
+.kanban-col-header .col-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--col-color);
+  flex-shrink: 0;
+}
+.kanban-col-header .col-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--col-color);
+  font-weight: 600;
+  flex: 1;
+}
+.kanban-col-header .col-count {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface2);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+.kanban-col .card {
+  /* cards un poco más compactas en kanban */
+  padding: 16px 18px 14px;
+  gap: 10px;
+}
+/* ─── GRID (fallback / no usado) ───────────────────────────────────────── */
 .grid {
   max-width: 900px;
   margin: 0 auto 32px;
@@ -416,6 +453,25 @@ body {
 .ext-link.profile { color: var(--muted); border-color: var(--border); }
 .ext-link.profile:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-lo); }
 
+/* ─── FILTER BUTTONS ────────────────────────────────────────────────────── */
+.filter-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--fg); }
+.filter-btn.active {
+  background: var(--accent-lo);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ─── ARCHIVED SECTION ──────────────────────────────────────────────────── */
 .archived-toggle {
   max-width: 900px;
@@ -462,8 +518,14 @@ body {
   </div>
 </header>
 
-<div class="section-label" id="lbl-active">Activos</div>
-<main class="grid" id="grid-active"></main>
+<!-- filtro responsable -->
+<div style="max-width:none;padding:0 max(16px,env(safe-area-inset-left,0px));margin-bottom:16px;display:flex;gap:8px;align-items:center">
+  <span style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Ver:</span>
+  <button class="filter-btn active" data-filter="all"   onclick="setFilter('all')">Todos</button>
+  <button class="filter-btn"        data-filter="Yo"    onclick="setFilter('Yo')">👤 Yo</button>
+  <button class="filter-btn"        data-filter="Guille" onclick="setFilter('Guille')">👤 Guille</button>
+</div>
+<div class="kanban" id="kanban"></div>
 
 
 
@@ -876,21 +938,51 @@ function buildCard(h, idx) {
 }
 
 /* ── RENDER ────────────────────────────────────────────────────────────── */
-let archivedVisible = false;
+let currentFilter = 'all';
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  render();
+}
+
+const COLUMNS = [
+  { key: 'planning',  label: 'Pendiente',   color: '#3B82F6' },
+  { key: 'building',  label: 'En progreso',  color: '#F59E0B' },
+  { key: 'submitted', label: 'Enviado',      color: '#A855F7' },
+  { key: 'won',       label: 'Ganado',       color: '#22C55E' },
+];
 
 function render() {
-  const active   = HACKATHONS.filter(h => !h.closed);
-  const archived = HACKATHONS.filter(h => h.closed);
+  const visible = HACKATHONS.filter(h => {
+    if (!h.closed) return currentFilter === 'all' || (h.responsable || 'Yo') === currentFilter;
+    return false;
+  });
 
-  document.getElementById('grid-active').innerHTML =
-    active.map((h, i) => buildCard(h, HACKATHONS.indexOf(h))).join('');
-
-
+  const kanban = document.getElementById('kanban');
+  kanban.innerHTML = COLUMNS.map(col => {
+    const cards = visible.filter(h => {
+      const cur = currentStageStatus(h.stages);
+      return cur.status === col.key;
+    });
+    const cardsHtml = cards.map(h => buildCard(h, HACKATHONS.indexOf(h))).join('');
+    return `
+      <div class="kanban-col">
+        <div class="kanban-col-header" style="--col-color:${col.color}">
+          <div class="col-dot"></div>
+          <span class="col-name">${col.label}</span>
+          <span class="col-count">${cards.length}</span>
+        </div>
+        ${cardsHtml || `<div style="font-size:12px;color:var(--muted);padding:12px;text-align:center;opacity:.5">—</div>`}
+      </div>`;
+  }).join('');
 
   // stats
-  document.getElementById('count-active').textContent = active.length;
-  const myTotal = HACKATHONS
-    .filter(h => !h.closed && h.totalPrize != null)
+  document.getElementById('count-active').textContent = visible.length;
+  const myTotal = visible
+    .filter(h => h.totalPrize != null)
     .reduce((s, h) => s + Math.round(h.totalPrize * h.mySharePct / 100), 0);
   document.getElementById('total-prize').textContent =
     myTotal > 0 ? fmtPrize(myTotal) + ' posible' : '—';
