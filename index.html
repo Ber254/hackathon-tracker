@@ -894,14 +894,32 @@ function render() {
       { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function deleteCard(idx) {
+async function deleteCard(idx) {
   const h = HACKATHONS[idx];
   if (!confirm(`¿Eliminar "${h.name}" del tablero?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    await fetch('/api/hackathons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: h.name })
+    });
+  } catch(e) { /* sin conexión, solo elimina en memoria */ }
   HACKATHONS.splice(idx, 1);
   render();
 }
 
-
+async function loadDeleted() {
+  try {
+    const res = await fetch('/api/hackathons');
+    if (!res.ok) return render();
+    const deleted = await res.json();
+    deleted.forEach(name => {
+      const idx = HACKATHONS.findIndex(h => h.name === name);
+      if (idx !== -1) HACKATHONS.splice(idx, 1);
+    });
+  } catch(e) { /* sin API, mostrar todo */ }
+  render();
+}
 
 /* ── THEME ─────────────────────────────────────────────────────────────── */
 function toggleTheme() {
@@ -914,5 +932,5 @@ try {
   if (t) document.documentElement.setAttribute('data-theme', t);
 } catch(e) {}
 
-render();
+loadDeleted();
 </script>
