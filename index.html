@@ -854,45 +854,17 @@ function buildCard(h, idx) {
       </div>`;
   }).join('');
 
-  // prize section
+  // prize section — siempre muestra el pool total (todo al 50% entre socios)
   let prizeHtml = '';
   if (h.totalPrize != null) {
-    if (resp === "Guille") {
-      // card a cargo de Guille — solo mostramos el pool total
-      prizeHtml = `
-        <div class="divider"></div>
-        <div class="prize-row">
-          <div class="prize-block">
-            <span class="prize-label">Premio pool</span>
-            <span class="prize-amount">${fmtPrize(h.totalPrize)}</span>
-          </div>
-        </div>`;
-    } else if (h.mySharePct < 100) {
-      // a cargo mio pero con split
-      prizeHtml = `
-        <div class="divider"></div>
-        <div class="prize-row">
-          <div class="prize-block">
-            <span class="prize-label">Premio total</span>
-            <span class="prize-amount">${fmtPrize(h.totalPrize)}</span>
-          </div>
-          <span class="prize-arrow">→</span>
-          <div class="prize-block">
-            <span class="prize-label">Mi parte (${h.mySharePct}%)</span>
-            <span class="prize-amount mine">${fmtPrize(myNet)}</span>
-          </div>
-        </div>`;
-    } else {
-      // 100% mio
-      prizeHtml = `
-        <div class="divider"></div>
-        <div class="prize-row">
-          <div class="prize-block">
-            <span class="prize-label">Premio</span>
-            <span class="prize-amount mine">${fmtPrize(h.totalPrize)}</span>
-          </div>
-        </div>`;
-    }
+    prizeHtml = `
+      <div class="divider"></div>
+      <div class="prize-row">
+        <div class="prize-block">
+          <span class="prize-label">Premio</span>
+          <span class="prize-amount mine">${fmtPrize(h.totalPrize)}</span>
+        </div>
+      </div>`;
   }
 
   // responsable
