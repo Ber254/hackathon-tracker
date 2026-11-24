@@ -686,27 +686,6 @@ const HACKATHONS = [
     pending: ["Completar agreement", "Definir proyecto"]
   },
   {
-    name: "Kiroween 2026",
-    project: "MatriMillApp",
-    closed: true,
-    totalPrize: null,
-    mySharePct: 100,
-    partners: [],
-    link: null,
-    linkLabel: null,
-    profileLink: "https://devpost.com/submit-to/31667-kiroween-2026/manage/submissions",
-    profileLabel: "Mi submission",
-    stages: [
-      {
-        name: "Crear proyecto",
-        status: "planning",
-        date: null,
-        notes: "Inscripto. Proyecto aún no creado en Devpost."
-      }
-    ],
-    pending: ["Crear proyecto en Devpost", "Subir submission"]
-  },
-  {
     name: "Monad Hackathon",
     project: "Finvia",
     closed: false,
@@ -866,16 +845,11 @@ function buildCard(h, idx) {
       </div>`;
   }
 
-  // close/reopen button label
-  const closeBtn = h.closed
-    ? `<button class="card-action-btn" onclick="toggleClosed(${idx})">↩ Reabrir</button>`
-    : `<button class="card-action-btn danger" onclick="toggleClosed(${idx})">Cerrar</button>`;
-
   return `
-    <div class="card${h.closed ? ' archived' : ''}" style="--c-accent: ${accent}">
+    <div class="card" style="--c-accent: ${accent}">
       <div class="card-top">
         <span class="card-badge" style="--c-accent:${accent}">${curStatus.label}</span>
-        <div class="card-actions">${closeBtn}</div>
+        <button class="card-action-btn danger" onclick="deleteCard(${idx})">✕ Eliminar</button>
       </div>
       <div>
         ${h.project ? `<div class="card-project">${h.project}</div>` : ''}
@@ -920,9 +894,10 @@ function render() {
       { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-/* ── TOGGLE CLOSED (in-memory, resets on reload — editá closed: en el array para persistir) */
-function toggleClosed(idx) {
-  HACKATHONS[idx].closed = !HACKATHONS[idx].closed;
+function deleteCard(idx) {
+  const h = HACKATHONS[idx];
+  if (!confirm(`¿Eliminar "${h.name}" del tablero?\nEsta acción no se puede deshacer.`)) return;
+  HACKATHONS.splice(idx, 1);
   render();
 }
 
