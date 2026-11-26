@@ -16,11 +16,12 @@
   --accent:    #7C5CFC;
   --accent-lo: rgba(124,92,252,.12);
 
-  --s-planning:   #3B82F6;
-  --s-building:   #F59E0B;
-  --s-submitted:  #A855F7;
-  --s-won:        #22C55E;
-  --s-lost:       #64748B;
+  --s-planning:    #3B82F6;
+  --s-building:    #F59E0B;
+  --s-submitted:   #A855F7;
+  --s-evaluating:  #06B6D4;
+  --s-won:         #22C55E;
+  --s-lost:        #64748B;
 
   --font-display: 'Syne', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
@@ -704,7 +705,8 @@ const HACKATHONS = [
     profileLink: "https://devpost.com/software/waylens",
     profileLabel: "Mi submission",
     stages: [
-      { name: "Submission", status: "submitted", date: "2026-11-30", notes: null }
+      { name: "Submission", status: "won", date: "2026-11-26", notes: "WayLens entregado" },
+      { name: "Evaluación", status: "evaluating", date: "2026-11-30", notes: "Cierre de entregas — esperando fallo del jurado" }
     ],
     pending: []
   },
@@ -776,11 +778,12 @@ const HACKATHONS = [
 
 /* ── STATUS CONFIG ─────────────────────────────────────────────────────── */
 const STATUS = {
-  planning:  { label: "Pendiente",  color: "var(--s-planning)"  },
-  building:  { label: "En progreso",color: "var(--s-building)"  },
-  submitted: { label: "Enviado",    color: "var(--s-submitted)" },
-  won:       { label: "Ganado",     color: "var(--s-won)"       },
-  lost:      { label: "Eliminado",  color: "var(--s-lost)"      },
+  planning:   { label: "Pendiente",     color: "var(--s-planning)"   },
+  building:   { label: "En progreso",   color: "var(--s-building)"   },
+  submitted:  { label: "Enviado",       color: "var(--s-submitted)"  },
+  evaluating: { label: "En evaluación", color: "var(--s-evaluating)" },
+  won:        { label: "Ganado",        color: "var(--s-won)"        },
+  lost:       { label: "Eliminado",     color: "var(--s-lost)"       },
 };
 
 /* ── HELPERS ───────────────────────────────────────────────────────────── */
@@ -921,10 +924,11 @@ function setFilter(f) {
 }
 
 const COLUMNS = [
-  { key: 'planning',  label: 'Pendiente',   color: '#3B82F6' },
-  { key: 'building',  label: 'En progreso',  color: '#F59E0B' },
-  { key: 'submitted', label: 'Enviado',      color: '#A855F7' },
-  { key: 'won',       label: 'Ganado',       color: '#22C55E' },
+  { key: 'planning',   label: 'Pendiente',      color: '#3B82F6' },
+  { key: 'building',   label: 'En progreso',    color: '#F59E0B' },
+  { key: 'submitted',  label: 'Enviado',        color: '#A855F7' },
+  { key: 'evaluating', label: 'En evaluación',  color: '#06B6D4' },
+  { key: 'won',        label: 'Ganado',         color: '#22C55E' },
 ];
 
 function render() {
